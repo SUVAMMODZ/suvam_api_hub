@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Suvam's API Hub</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0d0d12;
+    color: #e6e6e6;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  /* ===== LOCK SCREEN ===== */
+  #lockScreen {
+    position: fixed;
+    inset: 0;
+    background: #0d0d12;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  .lock-card {
+    background: #14141c;
+    border: 1px solid #22222e;
+    border-radius: 16px;
+    padding: 36px 30px;
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+  }
+  .lock-card h2 {
+    font-size: 1.4rem;
+    background: linear-gradient(90deg, #7c5cff, #22d3ee);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  .lock-card p { color: #8a8a95; font-size: 0.85rem; margin-bottom: 20px; }
+  .lock-card input {
+    width: 100%;
+    padding: 12px 14px;
+    background: #0a0a10;
+    border: 1px solid #22222e;
+    border-radius: 8px;
+    color: #e6e6e6;
+    font-size: 0.95rem;
+    outline: none;
+    margin-bottom: 12px;
+    text-align: center;
+    letter-spacing: 2px;
+  }
+  .lock-card input:focus { border-color: #7c5cff; }
+  .lock-card button {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(90deg, #7c5cff, #22d3ee);
+    color: #0d0d12;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  .lock-card button:hover { opacity: 0.9; }
+  #lockError {
+    color: #ff5c7c;
+    font-size: 0.82rem;
+    margin-top: 10px;
+    min-height: 16px;
+  }
+
+  /* ===== MAIN CONTENT ===== */
+  #mainContent { display: none; }
+
+  header {
+    text-align: center;
+    padding: 40px 0 30px;
+    border-bottom: 1px solid #1f1f28;
+  }
+  header h1 {
+    font-size: 2.4rem;
+    background: linear-gradient(90deg, #7c5cff, #22d3ee);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px;
+  }
+  header p { color: #9a9aa5; font-size: 1rem; }
+  .badge {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 6px 14px;
+    background: #16161f;
+    border: 1px solid #262633;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    color: #b0b0bb;
+  }
+  .badge a { color: #22d3ee; text-decoration: none; }
+  .badge a:hover { text-decoration: underline; }
+
+  .warn-banner {
+    margin: 20px 0 0;
+    padding: 12px 16px;
+    background: rgba(255, 92, 124, 0.08);
+    border: 1px solid rgba(255, 92, 124, 0.35);
+    border-radius: 10px;
+    color: #ff9db0;
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  h2.section-title {
+    margin: 40px 0 18px;
+    font-size: 1.3rem;
+    color: #c9c9d4;
+    border-left: 3px solid #7c5cff;
+    padding-left: 10px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 18px;
+  }
+
+  .card {
+    background: #14141c;
+    border: 1px solid #22222e;
+    border-radius: 14px;
+    padding: 22px;
+    transition: transform .15s ease, border-color .15s ease;
+  }
+  .card:hover { transform: translateY(-3px); border-color: #7c5cff; }
+  .card h3 { font-size: 1.1rem; color: #fff; margin-bottom: 8px; }
+  .card p { font-size: 0.9rem; color: #9a9aa5; line-height: 1.5; margin-bottom: 14px; }
+  .endpoint {
+    background: #0a0a10;
+    border: 1px solid #1e1e28;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: monospace;
+    font-size: 0.82rem;
+    color: #22d3ee;
+    word-break: break-all;
+    margin-bottom: 14px;
+  }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .tag {
+    font-size: 0.72rem;
+    padding: 3px 9px;
+    background: #1c1c28;
+    border-radius: 999px;
+    color: #b0b0bb;
+  }
+  .btn {
+    display: inline-block;
+    padding: 9px 16px;
+    background: linear-gradient(90deg, #7c5cff, #22d3ee);
+    color: #0d0d12;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    border: none;
+    cursor: pointer;
+  }
+  .btn:hover { opacity: 0.9; }
+  .btn-sm { padding: 7px 12px; font-size: 0.78rem; }
+
+  .plans {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .plan {
+    background: #14141c;
+    border: 1px solid #22222e;
+    border-radius: 14px;
+    padding: 22px;
+    text-align: center;
+  }
+  .plan h4 { color: #fff; margin-bottom: 6px; font-size: 1.05rem; }
+  .plan .price { font-size: 1.6rem; color: #22d3ee; margin: 10px 0; font-weight: 700; }
+  .plan ul { list-style: none; color: #9a9aa5; font-size: 0.85rem; line-height: 1.9; }
+  .plan.featured { border-color: #7c5cff; box-shadow: 0 0 30px rgba(124,92,255,0.15); }
+
+  .key-box {
+    margin-top: 40px;
+    background: #14141c;
+    border: 1px solid #22222e;
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .key-box h3 { margin-bottom: 10px; color: #fff; }
+  .key-box p { color: #9a9aa5; font-size: 0.9rem; margin-bottom: 14px; }
+  .key-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .key-row input, .key-row select {
+    flex: 1;
+    min-width: 180px;
+    padding: 11px 14px;
+    background: #0a0a10;
+    border: 1px solid #22222e;
+    border-radius: 8px;
+    color: #e6e6e6;
+    font-size: 0.9rem;
+    outline: none;
+  }
+  .key-row input:focus, .key-row select:focus { border-color: #7c5cff; }
+
+  .result-block {
+    margin-top: 20px;
+    background: #0a0a10;
+    border: 1px solid #1e1e28;
+    border-radius: 10px;
+    padding: 16px;
+    display: none;
+  }
+  .result-block label {
+    display: block;
+    font-size: 0.78rem;
+    color: #8a8a95;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .result-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .result-row:last-child { margin-bottom: 0; }
+  .result-value {
+    flex: 1;
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: #22d3ee;
+    word-break: break-all;
+    background: #14141c;
+    border: 1px solid #1e1e28;
+    border-radius: 6px;
+    padding: 9px 12px;
+  }
+  .result-warn {
+    margin-top: 12px;
+    font-size: 0.78rem;
+    color: #ff9db0;
+    line-height: 1.5;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 60px;
+    padding-top: 30px;
+    border-top: 1px solid #1f1f28;
+    color: #6b6b78;
+    font-size: 0.85rem;
+  }
+  footer a { color: #22d3ee; text-decoration: none; margin: 0 8px; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<!-- ===== LOCK SCREEN ===== -->
+<div id="lockScreen">
+  <div class="lock-card">
+    <h2>🔒 Suvam's API Hub</h2>
+    <p>Password daal bhai</p>
+    <input id="lockInput" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPass()" />
+    <button onclick="checkPass()">Unlock</button>
+    <div id="lockError"></div>
+  </div>
+</div>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="container" id="mainContent">
+
+  <header>
+    <h1>Suvam's API Hub</h1>
+    <p>Free & premium APIs — number info, tools, utilities, and more.</p>
+    <div class="badge">
+      Made by <strong>Suvam</strong> &nbsp;·&nbsp;
+      <a href="https://youtube.com/@YourChannelHere" target="_blank">YouTube</a> &nbsp;·&nbsp;
+      <a href="https://t.me/YourTelegramHere" target="_blank">Telegram</a>
+    </div>
+    <div class="warn-banner">
+      ⚠️ <strong>Warning:</strong> Yeh API sirf educational aur personal use ke liye hai.
+      Kisi bhi illegal ya unauthorized activity ke liye misuse mat karo. Misuse karne par key
+      permanently ban ho jaayegi.
+    </div>
+  </header>
+
+  <h2 class="section-title">Available APIs</h2>
+  <div class="grid">
+
+    <div class="card">
+      <h3>📱 Number Info API</h3>
+      <p>Get name, address, circle, email and more from an Indian mobile number.</p>
+      <div class="endpoint">GET /api/number/SUVAM-XXXX?number=9876543210</div>
+      <div class="tags">
+        <span class="tag">Key Required</span>
+        <span class="tag">India</span>
+      </div>
+      <a class="btn" href="#" onclick="alert('Pehle niche se key generate kar bhai'); return false;">Try It</a>
+    </div>
+
+  </div>
+
+  <h2 class="section-title">Plans</h2>
+  <div class="plans">
+
+    <div class="plan">
+      <h4>Free Trial</h4>
+      <div class="price">₹0</div>
+      <ul>
+        <li>Limited calls</li>
+        <li>Basic APIs only</li>
+        <li>No key required</li>
+      </ul>
+    </div>
+
+    <div class="plan featured">
+      <h4>2-Day Pass</h4>
+      <div class="price">Contact</div>
+      <ul>
+        <li>Unlimited calls</li>
+        <li>All APIs</li>
+        <li>Key expires in 48h</li>
+      </ul>
+    </div>
+
+    <div class="plan">
+      <h4>3-Day Pass</h4>
+      <div class="price">Contact</div>
+      <ul>
+        <li>Unlimited calls</li>
+        <li>All APIs</li>
+        <li>Key expires in 72h</li>
+      </ul>
+    </div>
+
+    <div class="plan">
+      <h4>Lifetime</h4>
+      <div class="price">Contact</div>
+      <ul>
+        <li>Unlimited calls</li>
+        <li>All APIs</li>
+        <li>Never expires</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="key-box">
+    <h3>🔑 Generate Access Key</h3>
+    <p>Apna naam / telegram daal, plan choose kar, aur full endpoint copy kar ke kisi ko bhi de de.</p>
+    <div class="key-row">
+      <input id="keyUser" placeholder="Your name / telegram username" />
+      <input id="keyNumber" placeholder="Demo number (optional)" value="9876543210" />
+      <select id="keyPlan">
+        <option value="2d">2 Days</option>
+        <option value="3d">3 Days</option>
+        <option value="life">Lifetime</option>
+      </select>
+      <button class="btn" onclick="genKey()">Generate</button>
+    </div>
+
+    <div id="resultBlock" class="result-block">
+      <label>Your Key</label>
+      <div class="result-row">
+        <div class="result-value" id="outKey"></div>
+        <button class="btn btn-sm" onclick="copyText('outKey')">Copy</button>
+      </div>
+
+      <label>Full Endpoint (Ready to Share)</label>
+      <div class="result-row">
+        <div class="result-value" id="outUrl"></div>
+        <button class="btn btn-sm" onclick="copyText('outUrl')">Copy</button>
+      </div>
+
+      <div class="result-warn">
+        ⚠️ Yeh key sirf personal/educational use ke liye hai. Kisi bhi illegal activity
+        ke liye misuse mat karna — misuse par key permanently ban ho jaayegi.
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    © 2026 Suvam's API Hub &nbsp;·&nbsp;
+    <a href="https://youtube.com/@YourChannelHere" target="_blank">YouTube</a>
+    <a href="https://t.me/YourTelegramHere" target="_blank">Telegram</a>
+  </footer>
+
+</div>
+
+<script>
+const PASSWORD = "SUVAM2314";
+const STORAGE_KEY = "suvam_hub_unlocked";
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem(STORAGE_KEY) === "yes") {
+    unlock();
+  }
+});
+
+function checkPass() {
+  const input = document.getElementById('lockInput').value;
+  const err = document.getElementById('lockError');
+
+  if (input === PASSWORD) {
+    sessionStorage.setItem(STORAGE_KEY, "yes");
+    unlock();
+  } else {
+    err.textContent = "❌ Galat password bhai";
+    document.getElementById('lockInput').value = "";
+  }
+}
+
+function unlock() {
+  document.getElementById('lockScreen').style.display = "none";
+  document.getElementById('mainContent').style.display = "block";
+}
+
+function genKey() {
+  const user = document.getElementById('keyUser').value.trim() || 'user';
+  const plan = document.getElementById('keyPlan').value;
+  const number = document.getElementById('keyNumber').value.trim() || '9876543210';
+
+  const rand = Math.random().toString(36).slice(2, 10).toUpperCase();
+  const prefix = plan === 'life' ? 'LIFE' : plan === '3d' ? 'D3' : 'D2';
+  // ✅ key prefix ab SUVAM hai, ADITYA nahi
+  const key = `SUVAM-${prefix}-${user.slice(0,6).toUpperCase()}-${rand}`;
+
+  const fullUrl = `${window.location.origin}/api/number/${key}?number=${encodeURIComponent(number)}`;
+
+  document.getElementById('outKey').textContent = key;
+  document.getElementById('outUrl').textContent = fullUrl;
+  document.getElementById('resultBlock').style.display = 'block';
+}
+
+function copyText(id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const el = document.getElementById(id);
+    const original = el.textContent;
+    el.textContent = '✅ Copied!';
+    setTimeout(() => { el.textContent = original; }, 1200);
+  });
+}
+</script>
+
+</body>
+</html>
