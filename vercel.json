@@ -1,6 +1,7 @@
 {
+  "version": 2,
   "functions": {
-    "api/*.py": {
+    "api/index.py": {
       "runtime": "@vercel/python@4.3.0"
     }
   }
